@@ -79,3 +79,67 @@ end
 
 select dbo.GetCustomersCountByAge(20)
 
+
+create function dbo.getEmployeesAverageAgesByCondition(@id int)
+returns float
+as
+begin
+declare @sum float=cast((select Sum(Age) from Employees where id>@id)as float)
+declare @count float=cast((select Count(Age)from Employees where id>@id)as float)
+return @sum/@count
+end
+
+select dbo.getEmployeesAverageAgesByCondition(5)
+select * from Employees
+
+
+
+create procedure usp_InsertEmployee1
+@name nvarchar(50),
+@age int,
+@address nvarchar(100)
+as
+Begin
+insert into Employees([Name],[Age],[Address])
+values(@name,@age,@address)
+End
+go
+
+exec  usp_InsertEmployee1 'Nihad',50,'Bayil'
+select * from Employees
+
+create procedure usp_SumOfNums
+@num1 int,
+@num2 int
+as
+select @num1+@num2
+exec usp_SumOfNums 5,7
+
+create table EmployeeLogs(
+[id] int primary key identity(1,1),
+[EmployeeId] int,
+[Operation] nvarchar(50),
+[Date]datetime
+)
+
+
+create trigger trg_InsertEmployee on Employees
+for insert
+as
+begin
+insert into EmployeeLogs([EmployeeId],[Operation],[Date])
+select Id,'Insert',GETDATE() from inserted
+end
+
+
+create trigger trg_DeletedEmployee on Employees
+after delete
+as
+begin
+insert into EmployeeLogs([EmployeeId],[Operation],[Date])
+select Id,'Delete',GETDATE() from deleted
+end
+
+select * from EmployeeLogs
+select * from Employees
+delete from Employees where id=7
